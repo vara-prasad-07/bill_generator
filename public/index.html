@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Image Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-area.dragover {
+            border-color: #5a67d8;
+            background: rgba(90, 103, 216, 0.15);
+            transform: scale(1.05);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .file-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #result table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        #result th,
+        #result td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #result th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+
+        #result tr:nth-child(even) {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+
+        #result tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-left-color: #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+
+        .preview-container {
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Bill Processor</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to select a bill image or drag & drop</div>
+            <small style="color: #999;">Supports JPG, PNG, PDF files</small>
+            <input type="file" id="fileInput" accept="image/*,.pdf" />
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img class="preview-image" id="previewImage" alt="Preview" />
+        </div>
+
+        <button type="button" class="btn" id="processBtn" disabled onclick="processBill()">
+            Process Bill
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Processing your bill image...</div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processBtn = document.getElementById('processBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const uploadArea = document.querySelector('.upload-area');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+
+        // File input change handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            
+            if (file) {
+                // Show file info
+                fileName.textContent = file.name;
+                fileSize.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                fileInfo.style.display = 'block';
+                processBtn.disabled = false;
+
+                // Show preview for images
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+
+                // Hide previous results
+                result.style.display = 'none';
+            }
+        }
+
+        function processBill() {
+            if (!fileInput.files[0]) {
+                alert('Please select a file first!');
+                return;
+            }
+
+            // Show loading state
+            loading.style.display = 'block';
+            processBtn.disabled = true;
+            result.style.display = 'none';
+
+            // Create FormData and make API call
+            const formData = new FormData();
+            formData.append('bill_image', fileInput.files[0]);
+
+            fetch('http://localhost:3000/process-bill', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Always hide loading first
+                loading.style.display = 'none';
+                processBtn.disabled = false;
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response Data:', data);
+                
+                // Show results
+                result.style.display = 'block';
+                result.className = 'success';
+                
+                if (data.data && data.data.html_table) {
+                    result.innerHTML = `
+                        <h3>📊 Processed Results</h3>
+                        ${data.data.html_table}
+                        
+                        <details style="margin-top: 20px;">
+                            <summary style="cursor: pointer; color: #4CAF50; font-weight: bold;">📋 View JSON Data</summary>
+                            <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 10px;">${JSON.stringify(data.data.json, null, 2)}</pre>
+                        </details>
+                    `;
+                    
+                    // Log JSON data if available
+                    if (data.data.json) {
+                        console.log('JSON Data:', data.data.json);
+                    }
+                } else {
+                    result.innerHTML = `
+                        <h3>✅ Processing Complete</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Ensure loading is hidden and button is re-enabled
+                loading.style.display = 'none';
+                processBtn.disabled = false;
+
+                // Show error
+                result.style.display = 'block';
+                result.className = 'error';
+                result.innerHTML = `
+                    <h3>❌ Error Processing Bill</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Please check if your backend server is running on <code>http://localhost:3000</code></p>
+                    <details>
+                        <summary>Technical Details</summary>
+                        <pre>${error.stack || error.toString()}</pre>
+                    </details>
+                `;
+            });
+        }
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter' && !processBtn.disabled) {
+                e.preventDefault(); // Prevent any default behavior
+                processBill();
+            }
+        });
+
+        // Prevent form submission on Enter key in file input
+        fileInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
