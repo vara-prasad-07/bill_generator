@@ -206,7 +206,7 @@ app.post('/process-bill', upload.single('bill_image'), async (req, res) => {
           </tr>
         </thead>
         <tbody>
-          <!-- Create a clean HTML table with all extracted information -->
+          <!-- Create a clean HTML table with only Merchant, Date, Payment Method, items with pices and quantity, and Total Amount -->
           <!-- Each row should have: <tr><td>Field Name</td><td>Extracted Value</td></tr> -->
         </tbody>
       </table>
