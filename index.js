@@ -191,6 +191,7 @@ app.post('/process-bill', upload.single('bill_image'), async (req, res) => {
         "total_amount": "extracted total amount",
         "time_stamp": "extracted date and time",
         "payment_method": "extracted payment method"
+        Save every bill with a timestamp in this exact format: "timestamp": "YYYY-MM-DDTHH:MM:SSZ" using UTC time (ISO 8601 standard)
         
         // Add any other fields you find relevant (merchant name, items, etc.)
         // Structure the JSON optimally based on the bill content
@@ -198,18 +199,33 @@ app.post('/process-bill', upload.single('bill_image'), async (req, res) => {
       ---JSON_END---
       
       ---HTML_TABLE_START---
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;">
-        <thead>
-          <tr style="background-color: #4CAF50; color: white;">
-            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Field</th>
-            <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Create a clean HTML table with only Merchant, Date, Payment Method, items with pices and quantity, and Total Amount -->
-          <!-- Each row should have: <tr><td>Field Name</td><td>Extracted Value</td></tr> -->
-        </tbody>
-      </table>
+     <div style="overflow-x:auto; font-family: Arial, sans-serif; margin-top: 20px;">
+  <table style="width: 100%; border-collapse: collapse; min-width: 400px;">
+    <thead>
+      <tr style="background-color: #4CAF50; color: white;">
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Field</th>
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+    <!-- Create a clean HTML table with only Merchant, Date, Payment Method, items with pices and quantity, and Total Amount -->
+          <!-- Each row should have: <tr>
+        <td style="padding: 10px; border: 1px solid #ddd;">field name</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">value</td>
+      </tr> -->
+      <!--For items 
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd;">Items</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Item 1 (x2) - ₹50</li>
+            <li>Item 2 (x1) - ₹100</li>
+          </ul>
+        </td>
+      </tr>-->
+    </tbody>
+  </table>
+</div>
       ---HTML_TABLE_END---
       
       Instructions:
