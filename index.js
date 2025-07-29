@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI("AIzaSyDhapLjJiIOEToKZDIVgAjo2XluxO3dQHg");
+const genAI = new GoogleGenerativeAI(process.env.API);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -175,7 +175,7 @@ app.post('/process-bill', upload.single('bill_image'), async (req, res) => {
     const mimeType = req.file.mimetype;
 
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Prepare the prompt for bill analysis
     const prompt = `
